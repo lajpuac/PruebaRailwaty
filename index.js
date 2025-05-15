@@ -1,32 +1,47 @@
 const express = require('express');
-const cors = require('cors');
+const mysql = require('mysql2');
+
 const app = express();
+const PORT = 3000;
 
-const PORT = process.env.PORT;
-const DB_HOST = process.env.DB_HOST; 
-const DB_PORT = process.env.DB_PORT; 
-const DB_USER = process.env.DB_USER;
-const DB_PASSWORD = process.env.DB_PASSWORD; 
+// ConfiguraciÃ³n de la base de datos
+const conexion = {
+    host: process.env.MYSQLHOST,
+    user: process.env.MYSQLUSER,
+    port: process.env.MYSQLPORT,
+    password: process.env.MYSQLPASSWORD,
+    database: process.env.MYSQLDATABASE
+  }
 
-app.use(cors());
-app.use(express.json());
+console.log("RT::", conexion)
+const connection = mysql.createConnection(conexion);
 
-// Rutas básicas
+// Conectar a la base de datos
+connection.connect(err => {
+  if (err) {
+    console.error('Error conectando a la base de datos:', err.stack);
+    return;
+  }
+  console.log('Conectado a la base de datos.');
+});
+
+// Ruta GET /personas
+app.get('/personas', (req, res) => {
+  connection.query('SELECT * FROM person', (error, results) => {
+    if (error) {
+      console.error('Error al consultar la tabla:', error);
+      res.status(500).json({ error: 'Error al consultar la base de datos' });
+    } else {
+      res.json(results);
+    }
+  });
+});
+
 app.get('/', (req, res) => {
-  res.send('¡Backend funcionando en Railway!');
+   res.send("hola ric")
 });
 
-app.get('/usuarios', (req, res) => {
-  res.json(usuarios);
-});
-
-app.post('/usuarios', (req, res) => {
-  const nuevoUsuario = req.body;
-  nuevoUsuario.id = usuarios.length + 1;
-  usuarios.push(nuevoUsuario);
-  res.status(201).json(nuevoUsuario);
-});
-
+// Iniciar el servidor
 app.listen(PORT, () => {
-  console.log(`Servidor escuchando en el puerto ${PORT}`);
+  console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });
